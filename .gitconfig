@@ -1,0 +1,14 @@
+[alias]
+
+	co = checkout
+	ci = !git add -A && git status && git commit
+	st = status
+	br = branch
+	hist = log --graph --all --decorate=short
+	type = cat-file -t
+	dump = cat-file -p
+
+[user]
+
+	name = "trong"
+	email = "asdf@gmail.com"
