@@ -24,11 +24,25 @@
 ;; remove trailing whitespace on save
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
+;; This function and its key binding is oddly integrated with
+;; ~/emacs/autopair.el. See my-python-default-handle-action in that
+;; file for details.
+(defun my-newline-and-indent-relative-maybe()
+  (interactive)
+  (end-of-line)
+  (newline)
+  (indent-relative-maybe))
+
 (defun my-hard-newline-and-indent-relative-maybe()
   (interactive)
   (newline)
   (indent-relative-maybe)
   )
+
+(defun my-eol-newline()
+  (interactive)
+  (end-of-line)
+  (newline))
 
 (defun back-to-indentation-or-beginning ()
   (interactive)
@@ -57,6 +71,40 @@
             (backward-char))
           (skip-chars-backward " \t"))))))
 
+;; moving text up and down
+(defun move-text-internal (arg)
+  (cond
+   ((and mark-active transient-mark-mode)
+    (if (> (point) (mark))
+        (exchange-point-and-mark))
+    (let ((column (current-column))
+          (text (delete-and-extract-region (point) (mark))))
+      (forward-line arg)
+      (move-to-column column t)
+      (set-mark (point))
+      (insert text)
+      (exchange-point-and-mark)
+      (setq deactivate-mark nil)))
+   (t
+    (let ((column (current-column)))
+      (beginning-of-line)
+      (when (or (> arg 0) (not (bobp)))
+        (forward-line)
+        (when (or (< arg 0) (not (eobp)))
+          (transpose-lines arg))
+        (forward-line -1))
+      (move-to-column column t)))))
+(defun move-text-down (arg)
+  "Move region (transient-mark-mode active) or current line
+  arg lines down."
+  (interactive "*p")
+  (move-text-internal arg))
+(defun move-text-up (arg)
+  "Move region (transient-mark-mode active) or current line
+  arg lines up."
+  (interactive "*p")
+  (move-text-internal (- arg)))
+
 ;; duplicate region
 (defun duplicate-current-line-or-region (arg)
   "Duplicates the current line or region ARG times.
@@ -77,6 +125,17 @@ there's a region, all lines that region covers will be duplicated."
         (insert region)
         (setq end (point)))
       (goto-char (+ origin (* (length region) arg) arg)))))
+
+;; Don't need this anymore.
+;; ;; Toggles c-mode, because sometimes autopair doesn't work in
+;; ;; c-mode. This seems to fix it each time.
+;; (global-set-key [?\C-x ?c] 'c-mode)
+
+;; Line wraps like Notepad
+;; (global-visual-line-mode)
+;;
+;; Do this for individual file types, because it doesn't work well
+;; with some, e.g. [i]buffers.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -101,6 +160,9 @@ there's a region, all lines that region covers will be duplicated."
     )
   )
  )
+;; (add-hook 'org-mode-hook 'turn-on-auto-fill)
+;; (add-hook 'LaTeX-mode (lambda()
+;;			(auto-fill-mode nul)))
 
 (defun my-latex-hook ()
   (local-set-key (kbd "C-c m") 'insert-mathinline)
@@ -120,6 +182,7 @@ there's a region, all lines that region covers will be duplicated."
   (local-set-key (kbd "C-]") 'insert-braces-percents) ;; The actual key is C-5
   (local-set-key (kbd "M-{") 'insert-double-braces)
   (local-set-key (kbd "RET") 'my-html-enter)
+  (local-set-key (kbd "C-M-j") 'my-js-braces-newline-semicolon)
   (local-set-key (kbd "C-c RET") 'insert-p-tag)
   (local-set-key (kbd "C-c C-l") 'insert-li)
   (local-set-key (kbd "C-c C-i") 'insert-italics)
@@ -144,6 +207,17 @@ there's a region, all lines that region covers will be duplicated."
     (setq indent-tabs-mode nil)
     (setq c-indent-level 4)
     (local-set-key (kbd "M-'") 'my-insert-pointer)
+    (local-set-key (kbd "C-j") 'my-c++-semicolon-newline)
+    (local-set-key (kbd "M-j") 'my-c++-braces-newline)
+    )))
+
+(add-hook
+ 'c-mode-hook
+ (function
+  (lambda ()
+    (setq indent-tabs-mode nil)
+    (setq c-indent-level 4)
+    (local-set-key (kbd "M-'") 'my-insert-pointer)
     (local-set-key (kbd "M-j") 'my-c++-braces-newline)
     )))
 
@@ -158,6 +232,7 @@ there's a region, all lines that region covers will be duplicated."
     (local-set-key (kbd "C-c C-j") 'my-php-json-encode)
     (local-set-key (kbd "M-'") 'my-insert-pointer)
     (local-set-key (kbd "M-\"") 'my-insert-array-pointer)
+    (local-set-key (kbd "C-j") 'my-c++-semicolon-newline)
     (local-set-key (kbd "M-j") 'my-c++-braces-newline)
     )))
 
@@ -167,6 +242,8 @@ there's a region, all lines that region covers will be duplicated."
   (lambda()
     (local-set-key (kbd "TAB") 'my-indent-region)
     (local-set-key (kbd "M-'") 'my-python-insert-doc-string)
+    (local-set-key (kbd "C-j") 'my-newline-and-indent-relative-maybe)
+    (local-set-key (kbd "M-j") 'my-python-end-colon-newline)
     (local-set-key (kbd "C-c C-h") 'python-insert-httpresponseredirect)
     )))
 
@@ -174,6 +251,7 @@ there's a region, all lines that region covers will be duplicated."
  'js-mode-hook
  (function
   (lambda()
+    (local-set-key (kbd "C-j") 'my-c++-semicolon-newline)
     (local-set-key (kbd "M-j") 'my-c++-braces-newline)
     )))
 
@@ -248,11 +326,9 @@ there's a region, all lines that region covers will be duplicated."
 (setq scroll-step 1) ;; keyboard scroll one line at a time
 
 (setq lazy-highlight-cleanup nil)
-
-;;
-;; ORG MODE CUSTOMIZATIONS
-;;
-(setq org-support-shift-select t)
+;; (global-set-key (kbd "C-M-k") 'lazy-highlight-cleanup) ;; can be
+;; done with cs cg, i.e. start and cancel another search. Who knew
+;; giving up can be so useful!
 
 ;; Kill from cursor to beginning of line.
 ;; Overrides numerical /universal-argument/ command cu
@@ -320,16 +396,16 @@ there's a region, all lines that region covers will be duplicated."
   ;; If there is more than one, they won't work right.
  '(desktop-path (quote ("~/.emacs.d/"))))
 
-;; (custom-set-faces
-;;   ;; custom-set-faces was added by Custom.
-;;   ;; If you edit it by hand, you could mess it up, so be careful.
-;;   ;; Your init file should contain only one such instance.
-;;   ;; If there is more than one, they won't work right.
-;;  '(lazy-highlight ((((class color) (min-colors 8)) (:background "blue"))))
-;;  '(org-level-1 ((t (:background "blue" :foreground "white"))))
-;;  '(org-level-2 ((t (:foreground "yellow"))))
-;;  '(org-level-3 ((t (:foreground "cyan"))))
-;;  '(show-paren-match ((((class color) (background light)) (:background "blue")))))
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(lazy-highlight ((((class color) (min-colors 8)) (:background "blue"))))
+ '(org-level-1 ((t (:background "blue" :foreground "white"))))
+ '(org-level-2 ((t (:foreground "yellow"))))
+ '(org-level-3 ((t (:foreground "cyan"))))
+ '(show-paren-match ((((class color) (background light)) (:background "blue")))))
 
 (defvar my-keys-minor-mode-map (make-keymap) "my-keys-minor-mode keymap.")
 
@@ -483,6 +559,64 @@ there's a region, all lines that region covers will be duplicated."
   (insert "function")
   )
 
+(defun my-js-async-waterfall()
+  (interactive)
+  (indent-according-to-mode)
+  (insert "async.waterfall([")
+  (newline 1)
+  (insert "function(done){")
+  (indent-according-to-mode)
+  (newline 2)
+  (insert "},")
+  (indent-according-to-mode)
+  (newline 1)
+  (insert "], function(er){")
+  (indent-according-to-mode)
+  (newline 1)
+  (indent-according-to-mode)
+  (newline 1)
+  (insert "})")
+  (indent-according-to-mode)
+  (previous-line 4)
+  (indent-according-to-mode)
+  )
+
+(defun my-js-new-function-done()
+  (interactive)
+  (indent-according-to-mode)
+  (insert "function(done){")
+  (newline 2)
+  (insert "}")
+  (indent-according-to-mode)
+  (previous-line 1)
+  (indent-according-to-mode)
+  )
+
+(defun my-js-braces-newline-semicolon()
+  (interactive)
+  (end-of-code-or-line)
+  (backward-delete-char 1)
+  (insert "{")
+  (newline)
+  (indent-relative-maybe)
+  (insert "});")
+  (previous-line)
+  (end-of-code-or-line)
+  (newline-and-indent)
+  )
+
+(defun xm-insert-delay()
+  (interactive)
+  (insert "Delay 1")
+  )
+
+(defun xm-insert-key()
+  (interactive)
+  (insert "KeyStrPress \nKeyStrRelease ")
+  (previous-line)
+  (end-of-line)
+  )
+
 (defun my-save-all-no-question()
   (interactive)
   (save-some-buffers 1)
@@ -541,6 +675,15 @@ there's a region, all lines that region covers will be duplicated."
     (comment-or-uncomment-region
      (line-beginning-position) (line-end-position))))
 
+(defun my-c++-semicolon-newline()
+  (interactive)
+  (end-of-code-or-line)
+  (insert ";")
+  (newline-and-indent)
+  )
+
+
+
 (defun my-c++-braces-newline()
   (interactive)
   (end-of-code-or-line)
@@ -551,6 +694,13 @@ there's a region, all lines that region covers will be duplicated."
   (previous-line)
   (end-of-code-or-line)
   (newline-and-indent))
+
+(defun my-python-end-colon-newline()
+  (interactive)
+  (end-of-code-or-line)
+  (insert ":")
+  (my-newline-and-indent-relative-maybe)
+  (indent-by-adding-4-spaces))
 
 (defun my-select-line()
   (interactive)
@@ -672,6 +822,13 @@ With argument ARG, do this that many times."
              (setq deactivate-mark t))
     (my-delete-line)))
 
+(defun my-insert-date()
+  (interactive)
+  (insert (shell-command-to-string "date +'%F %^a %R:%S'"))
+  (delete-backward-char 1)
+  (newline)
+  )
+
 (defun my-insert-pointer()
   (interactive)
   (insert "->"))
@@ -680,6 +837,10 @@ With argument ARG, do this that many times."
   (interactive)
   (insert "=>")
   )
+
+(defun my-hline()
+  (interactive)
+  (insert-char ?- 77))
 
 (defun my-python-insert-doc-string()
   (interactive)
@@ -711,7 +872,11 @@ With argument ARG, do this that many times."
 
 (global-set-key "\M-;" 'my-comment-dwim-line)
 
+(define-key my-keys-minor-mode-map [M-up] 'move-text-up)
+(define-key my-keys-minor-mode-map [M-down] 'move-text-down)
 (global-set-key (kbd "RET") 'my-hard-newline-and-indent-relative-maybe)
+(global-set-key (kbd "C-j") 'my-eol-newline)
+(global-set-key (kbd "M-j") 'my-newline-and-indent-relative-maybe)
 
 (define-key text-mode-map (kbd "TAB") 'my-indent-region)
 (define-key my-keys-minor-mode-map (kbd "<backtab>") 'my-unindent-region)
@@ -748,13 +913,24 @@ With argument ARG, do this that many times."
 (global-set-key (kbd "<end>") 'end-of-code-or-line)
 (global-set-key (kbd "C-a") 'back-to-indentation-or-beginning)
 (global-set-key (kbd "C-e") 'end-of-code-or-line)
+;(define-key my-keys-minor-mode-map (kbd "C-p") 'previous-line) ; Default
+;(define-key my-keys-minor-mode-map (kbd "C-n") 'next-line) ; Default
+;(define-key my-keys-minor-mode-map (kbd "M-f") 'forward-word) ; Default
+;(define-key my-keys-minor-mode-map (kbd "M-b") 'backward-word) ; Default
 (define-key my-keys-minor-mode-map (kbd "M-a") 'backward-paragraph)
 (define-key my-keys-minor-mode-map (kbd "M-e") 'forward-paragraph)
 
+(global-set-key (kbd "C-c q") 'auto-fill-mode)
 (global-set-key (kbd "C-c d") 'duplicate-current-line-or-region)
 (global-set-key "\C-x\C-b" 'buffer-menu) ;; instead of 'ibuffer
+(global-set-key (kbd "C-m") 'buffer-menu) ;; instead of 'ibuffer
 ;; (autoload 'ibuffer "ibuffer" "list buffers" t)
+(global-set-key (kbd "M-i") 'universal-argument)
 (global-set-key (kbd "M-/") 'dabbrev-expand)
+(global-set-key (kbd "C-t") 'my-insert-date)
+
+; DECOR
+(global-set-key (kbd "C-h C-l") 'my-hline)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -762,8 +938,17 @@ With argument ARG, do this that many times."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(global-set-key (kbd "C-<left>") 'previous-buffer)
+(global-set-key (kbd "C-<right>") 'next-buffer)
 (global-set-key (kbd "C-x k") 'my-kill-buffer)
 (global-set-key (kbd "C-x s") 'my-save-all-no-question)
+
+;; (defadvice autopair-newline ;my-hard-newline-and-indent-relative-maybe
+;;   (after newline-clear-screen last ())
+;;   "asdfasdf jalskdjf s"
+;;   (redraw-display)
+;;   )
+;; (ad-activate 'autopair-newline);my-hard-newline-and-indent-relative-maybe)
 
 ;; save file on buffer switch
 (defadvice switch-to-buffer (before save-buffer-now activate)
@@ -785,6 +970,25 @@ With argument ARG, do this that many times."
 
 (require 'generic-x)
 
+(define-generic-mode 'xm-mode
+  '("#") ;; Comments. Not sure .xm scripts have comments. Putting this
+         ;; here just for define-generic-mode syntax, just to be safe.
+  '("MotionNotify"
+    "ButtonPress" "ButtonRelease"
+    "KeyStrPress" "KeyStrRelease"
+    "Delay") ;; keywords
+  '() ;; some syntax defs, none in .xm
+  '("\\.xm$") ;; file extension
+  nil
+  )
+(add-hook
+ 'xm-mode-hook
+ (function
+  (lambda()
+    (local-set-key (kbd "C-c C-d") 'xm-insert-delay)
+    (local-set-key (kbd "C-c C-k") 'xm-insert-key)
+    )))
+
 ;; Use this function to replace a builtin generic mode you don't like,
 ;; e.g. javascript-generic-mode, with one you do like.
 
@@ -801,13 +1005,30 @@ With argument ARG, do this that many times."
  (function
   (lambda()
     (local-set-key (kbd "M-j") 'my-c++-braces-newline)
+    (local-set-key (kbd "C-c C-w") 'my-js-async-waterfall)
     (local-set-key (kbd "C-c C-d") 'my-js-new-function)
+    (local-set-key (kbd "C-c C-s") 'my-js-new-function-done)
     (local-set-key (kbd "C-c C-l") 'my-js-console-log)
     (local-set-key (kbd "C-c C-j") 'my-js-insert-json-stringify)
     )))
 
+;; Bug fix for greasemonkey meta block confusing js-mode highlighting
+(eval-after-load 'js
+  '(progn
+     (setq js--regexp-literal-fix  "[^=][=(,:]\\(?:\\s-\\|\n\\)*\\(/\\)\\(?:\\\\.\\|[^/*\\]\\)\\(?:\\\\.\\|[^/\\]\\)*\\(/\\)")
+     (setq js-font-lock-syntactic-keywords-fix
+           ;; "|" means generic string fence
+           `((,js--regexp-literal-fix (1 "|") (2 "|"))))
+     (setq js-font-lock-syntactic-keywords js-font-lock-syntactic-keywords-fix)))
+
 ;; Personal dictionary for ispell-checking
 (setq ispell-personal-dictionary (expand-file-name "~/.emacs.d/.ispell.dict"))
+
+;; ;; really auto-save, not emacs default auto-save
+;; (setq auto-save-default nil)
+;; (require 'real-auto-save)
+;; (add-hook 'find-file-hooks 'turn-on-real-auto-save)
+;; (setq real-auto-save-interval 300) ;; in seconds
 
 ;; copy to clipboard
 (setq x-select-enable-clipboard t)
@@ -816,20 +1037,26 @@ With argument ARG, do this that many times."
 (load-theme 'deeper-blue)
 (tool-bar-mode -1) ;; no tool bar at top in emacs window
 (cond
- ((member "Courier New" (font-family-list))
-  (set-face-attribute 'default nil :font "Courier New" :height 240))
-((member "Times New Roman" (font-family-list))
-  (set-face-attribute 'default nil :font "Times New Roman" :height 320))
-  ((member "CMU Typewriter Text" (font-family-list))
-  (set-face-attribute 'default nil :font "CMU Typewriter Text" :height 280))
+ ((member "Inconsolata" (font-family-list))
+  (set-face-attribute 'default nil :family "Inconsolata" :height 220 :weight 'bold))
  ((member "Consolas" (font-family-list))
-  (set-face-attribute 'default nil :font "Consolas" :height 240))
- ((member "Anonymous" (font-family-list))
-  (set-face-attribute 'default nil :font "Anonymous" :height 240))
- (set-face-attribute 'default nil :height 240))
+  (set-face-attribute 'default nil :font "Consolas" :height 200 :weight 'light))
+ ((member "Courier New" (font-family-list))
+  (set-face-attribute 'default nil :font "Courier New" :height 200 :weight 'light))
+ ((member "Arial" (font-family-list))
+  (set-face-attribute 'default nil :font "Arial" :height 220))
+ ((member "Times New Roman" (font-family-list))
+  (set-face-attribute 'default nil :font "Times New Roman" :height 220))
+ ((member "Courier" (font-family-list))
+  (set-face-attribute 'default nil :font "Courier" :height 180 :weight 'light))
+ ((member "CMU Typewriter Text" (font-family-list))
+  (set-face-attribute 'default nil :font "CMU Typewriter Text" :height 200))
+ (set-face-attribute 'default nil :height 200))
 
 ;; for working on windows emacs, which messes up line endings
-;; (set-default buffer-file-coding-system 'utf-8-unix) ;; this guy causes an error in osx emacs
+;; (set-default buffer-file-coding-system 'utf-8-unix)
 (set-default-coding-systems 'utf-8-unix)
 (prefer-coding-system 'utf-8-unix)
 (set-default default-buffer-file-coding-system 'utf-8-unix)
+
+(setq visible-bell 1)
