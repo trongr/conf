@@ -822,12 +822,9 @@ With argument ARG, do this that many times."
              (setq deactivate-mark t))
     (my-delete-line)))
 
-(defun my-insert-date()
+(defun timestamp ()
   (interactive)
-  (insert (shell-command-to-string "date +'%F %^a %R:%S'"))
-  (delete-backward-char 1)
-  (newline)
-  )
+  (insert (format-time-string "%y%m%d%a")))
 
 (defun my-insert-pointer()
   (interactive)
@@ -923,11 +920,11 @@ With argument ARG, do this that many times."
 (global-set-key (kbd "C-c q") 'auto-fill-mode)
 (global-set-key (kbd "C-c d") 'duplicate-current-line-or-region)
 (global-set-key "\C-x\C-b" 'buffer-menu) ;; instead of 'ibuffer
-(global-set-key (kbd "C-m") 'buffer-menu) ;; instead of 'ibuffer
+(global-set-key (kbd "C-;") 'buffer-menu) ;; instead of 'ibuffer
 ;; (autoload 'ibuffer "ibuffer" "list buffers" t)
 (global-set-key (kbd "M-i") 'universal-argument)
 (global-set-key (kbd "M-/") 'dabbrev-expand)
-(global-set-key (kbd "C-t") 'my-insert-date)
+(global-set-key (kbd "C-t") 'timestamp)
 
 ; DECOR
 (global-set-key (kbd "C-h C-l") 'my-hline)
@@ -1038,7 +1035,7 @@ With argument ARG, do this that many times."
 (tool-bar-mode -1) ;; no tool bar at top in emacs window
 (cond
  ((member "Inconsolata" (font-family-list))
-  (set-face-attribute 'default nil :family "Inconsolata" :height 220 :weight 'bold))
+  (set-face-attribute 'default nil :family "Inconsolata" :height 160 :weight 'bold))
  ((member "Consolas" (font-family-list))
   (set-face-attribute 'default nil :font "Consolas" :height 200 :weight 'light))
  ((member "Courier New" (font-family-list))
