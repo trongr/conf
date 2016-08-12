@@ -179,20 +179,219 @@ there's a region, all lines that region covers will be duplicated."
   (setq sgml-basic-offset 4)
   ;; (setq autopair-dont-activate t)
   (auto-fill-mode 0) ;; 0 turns a mode off, 1 on, not nil / t
-  (local-set-key (kbd "C-]") 'insert-braces-percents) ;; The actual key is C-5
-  (local-set-key (kbd "M-{") 'insert-double-braces)
-  (local-set-key (kbd "RET") 'my-html-enter)
-  (local-set-key (kbd "C-M-j") 'my-js-braces-newline-semicolon)
-  (local-set-key (kbd "C-c RET") 'insert-p-tag)
-  (local-set-key (kbd "C-c C-l") 'insert-li)
-  (local-set-key (kbd "C-c C-i") 'insert-italics)
-  (local-set-key (kbd "C-c C-o") 'insert-olist)
+  ;; (local-set-key (kbd "C-]") 'insert-braces-percents) ;; The actual key is C-5
+  ;; (local-set-key (kbd "M-{") 'insert-double-braces)
+  (local-set-key (kbd "RET") 'html-enter)
+  (local-set-key (kbd "C-c C-p") 'insert-p-tag)
+  (local-set-key (kbd "C-c C-i") 'html-italics)
+  (local-set-key (kbd "C-c C-b") 'html-bold)
   (local-set-key (kbd "C-c C-a") 'insert-href)
-  (local-set-key (kbd "C-c C-d") 'insert-div)
-  (local-set-key (kbd "C-c C-k") 'my-html-insert-class)
-  (local-set-key (kbd "C-c /") 'sgml-close-tag) ;; actually cc c/
+  (local-set-key (kbd "C-c C-k") 'html-class)
+  (local-set-key (kbd "C-c C-d") 'html-div)
+  (local-set-key (kbd "C-c O") 'html-ol)
+  (local-set-key (kbd "C-c U") 'html-ul)
+  (local-set-key (kbd "C-c L") 'insert-li)
+  (local-set-key (kbd "C-c C-s") 'html-span)
+  (local-set-key (kbd "C-c C-/") 'sgml-close-tag)
+  (local-set-key (kbd "C-c C") 'html-code)
+  (local-set-key (kbd "C-c RET") 'html-exit-tag)
+
+  (local-set-key (kbd "C-c h") 'html-hr)
+  (local-set-key (kbd "C-c M-i") 'html-img)
+  (local-set-key (kbd "C-c M-e") 'html-epigraph)
+
+  ;; for html mathjax
+  (local-set-key (kbd "C-c f") 'html-math-frac)
+  (local-set-key (kbd "C-c i") 'html-math-inverse)
+  (local-set-key (kbd "C-c p") 'html-math-partial)
+  (local-set-key (kbd "C-c P") 'html-math-parentheses)
+  (local-set-key (kbd "C-c B") 'html-math-brackets)
+  (local-set-key (kbd "C-c S") 'html-math-braces)
+  (local-set-key (kbd "C-c |") 'html-math-abs)
+  (local-set-key (kbd "C-c m") 'html-math-inline)
+  (local-set-key (kbd "C-c M") 'html-math-display)
+  (local-set-key (kbd "C-c a") 'html-math-align)
+  (local-set-key (kbd "C-c c") 'html-math-cases)
+
   )
+
 (add-hook 'html-mode-hook 'my-html-hook)
+
+;;
+;; HTML functions
+;;
+(defun insert-p-tag ()
+  ;; Insert HTML paragraph.
+  (interactive)
+  (insert "<p>\n    \n</p>")
+  (backward-char 5))
+
+(defun html-italics ()
+  ;; Insert HTML paragraph.
+  (interactive)
+  (insert "<i></i>")
+  (backward-char 4))
+
+(defun html-bold ()
+  ;; Insert HTML paragraph.
+  (interactive)
+  (insert "<b></b>")
+  (backward-char 4))
+
+(defun insert-olist ()
+  ;; Insert HTML ordered list
+  (interactive)
+  (insert "<ol></ol>")
+  (backward-char 5)
+  )
+
+(defun insert-li ()
+  ;; Insert HTML list item.
+  (interactive)
+  (insert "<li></li>")
+  (backward-char 5)
+  )
+
+(defun insert-href()
+  ;; Insert HTML links
+  (interactive)
+  (insert "<a href=\"images/\"></a>")
+  (backward-char 6))
+
+(defun html-code()
+  ;; Insert HTML links
+  (interactive)
+  (insert "<pre><code></code></pre>")
+  (backward-char 13))
+
+(defun html-div()
+  ;; Insert HTML links
+  (interactive)
+  (insert "<div >\n    \n</div>")
+  (backward-char 13))
+
+(defun html-ol()
+  ;; Insert HTML links
+  (interactive)
+  (insert "<ol></ol>")
+  (backward-char 5))
+
+(defun html-ul()
+  ;; Insert HTML links
+  (interactive)
+  (insert "<ul></ul>")
+  (backward-char 5))
+
+(defun html-span()
+  ;; Insert HTML links
+  (interactive)
+  (insert "<span ></span>")
+  (backward-char 8))
+
+;; (defun html-img()
+;;   (interactive)
+;;   (insert "<figure>\n")
+;;   (indent-according-to-mode)
+;;   (insert "<img src=\"\">\n")
+;;   (indent-according-to-mode)
+;;   (insert "<figcaption></figcaption>\n")
+;;   (un-indent-by-removing-4-spaces)
+;;   (insert "</figure>")
+;;   (previous-line 2)
+;;   (beginning-of-line)
+;;   (search-forward "\""))
+
+(defun html-img()
+  (interactive)
+  (insert "<img src=\"images/\">")
+  (backward-char 2))
+
+(defun html-hr()
+  (interactive)
+  (insert "<hr>"))
+
+(defun html-epigraph()
+  (interactive)
+  (insert "<div class=\"epigraph\">")
+  (newline)
+  (indent-relative)
+  (insert "<div class=\"quote\">")
+  (newline)
+  (indent-relative)
+  (newline)
+  (indent-relative)
+  (insert "</div><hr><div class=\"author\"></div>")
+  (newline)
+  (insert "</div>")
+  (previous-line 2)
+  (end-of-line)
+  (indent-relative))
+
+(defun html-class()
+  ;; Insert HTML class
+  (interactive)
+  (insert "class=\"\"")
+  (backward-char 1))
+
+(defun html-enter()
+  (interactive)
+  (newline)
+  (indent-relative-maybe))
+
+(defun html-math-frac()
+  (interactive)
+  (insert "\\frac{}{}")
+  (backward-char 3))
+
+(defun html-math-inverse()
+  (interactive)
+  (insert "^{-1}"))
+
+(defun html-math-partial()
+  (interactive)
+  (insert "\\partial "))
+
+(defun html-math-align()
+  (interactive)
+  (insert "\\begin{align*}")
+  (newline)
+  (indent-relative-maybe)
+  (newline)
+  (indent-relative-maybe)
+  (insert "\\end{align*}")
+  (previous-line 1)
+  (end-of-line))
+
+(defun html-math-parentheses()
+  (interactive)
+  (insert "\\left(  \\right)")
+  (backward-char 8))
+
+(defun html-math-brackets()
+  (interactive)
+  (insert "\\left[  \\right]")
+  (backward-char 8))
+
+(defun html-math-braces()
+  (interactive)
+  (insert "\\left\\{  \\right\\}")
+  (backward-char 9))
+
+(defun html-math-abs()
+  (interactive)
+  (insert "\\left|  \\right|")
+  (backward-char 8))
+
+(defun html-math-cases()
+  (interactive)
+  (insert "\\begin{cases}")
+  (newline)
+  (indent-relative-maybe)
+  (newline)
+  (indent-relative-maybe)
+  (insert "\\end{cases}")
+  (previous-line 1)
+  (end-of-line))
 
 (defun my-css-hook()
   (local-set-key (kbd "C-c C-b") 'my-css-insert-background-color)
@@ -431,51 +630,6 @@ there's a region, all lines that region covers will be duplicated."
   (backward-char 3))
 
 ;;
-;; HTML functions
-;;
-(defun insert-p-tag ()
-  ;; Insert HTML paragraph.
-  (interactive)
-  (insert "<p></p>")
-  (backward-char 4)
-  )
-
-(defun insert-italics ()
-  ;; Insert HTML italics.
-  (interactive)
-  (insert "<i></i>")
-  (backward-char 4)
-  )
-
-(defun insert-olist ()
-  ;; Insert HTML ordered list
-  (interactive)
-  (insert "<ol></ol>")
-  (backward-char 5)
-  )
-
-(defun insert-li ()
-  ;; Insert HTML list item.
-  (interactive)
-  (insert "<li></li>")
-  (backward-char 5)
-  )
-
-(defun insert-href()
-  ;; Insert HTML links
-  (interactive)
-  (insert "<a href=\"\">")
-  (backward-char 2)
-  )
-
-(defun insert-div()
-  ;; Insert HTML links
-  (interactive)
-  (insert "<div >")
-  (backward-char 1)
-  )
-
-;;
 ;; latex functions
 ;;
 (defun insert-mathinline ()
@@ -511,12 +665,6 @@ there's a region, all lines that region covers will be duplicated."
 ;;                                         global function dump here
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun my-html-insert-class()
-  (interactive)
-  (insert "class=\"\"")
-  (backward-char 1)
-  )
 
 (defun my-php()
   (interactive)
@@ -590,19 +738,6 @@ there's a region, all lines that region covers will be duplicated."
   (indent-according-to-mode)
   (previous-line 1)
   (indent-according-to-mode)
-  )
-
-(defun my-js-braces-newline-semicolon()
-  (interactive)
-  (end-of-code-or-line)
-  (backward-delete-char 1)
-  (insert "{")
-  (newline)
-  (indent-relative-maybe)
-  (insert "});")
-  (previous-line)
-  (end-of-code-or-line)
-  (newline-and-indent)
   )
 
 (defun xm-insert-delay()
@@ -824,7 +959,7 @@ With argument ARG, do this that many times."
 
 (defun timestamp ()
   (interactive)
-  (insert (format-time-string "%y%m%d%a")))
+  (insert (format-time-string "%y%m%d %a")))
 
 (defun my-insert-pointer()
   (interactive)
@@ -843,12 +978,6 @@ With argument ARG, do this that many times."
   (interactive)
   (insert "''''''")
   (backward-char 3))
-
-(defun my-html-enter()
-  (interactive)
-  (newline)
-  (indent-relative-maybe)
-  )
 
 (defun my-css-insert-background-color()
   (interactive)
@@ -1035,17 +1164,19 @@ With argument ARG, do this that many times."
 (tool-bar-mode -1) ;; no tool bar at top in emacs window
 (cond
  ((member "Inconsolata" (font-family-list))
-  (set-face-attribute 'default nil :family "Inconsolata" :height 160 :weight 'bold))
+  (set-face-attribute 'default nil :family "Inconsolata" :height 240 :weight 'bold))
  ((member "Consolas" (font-family-list))
   (set-face-attribute 'default nil :font "Consolas" :height 200 :weight 'light))
  ((member "Courier New" (font-family-list))
   (set-face-attribute 'default nil :font "Courier New" :height 200 :weight 'light))
  ((member "Arial" (font-family-list))
   (set-face-attribute 'default nil :font "Arial" :height 220))
- ((member "Times New Roman" (font-family-list))
-  (set-face-attribute 'default nil :font "Times New Roman" :height 220))
  ((member "Courier" (font-family-list))
   (set-face-attribute 'default nil :font "Courier" :height 180 :weight 'light))
+ ((member "Times New Roman" (font-family-list))
+  (set-face-attribute 'default nil :font "Times New Roman" :height 220))
+ ((member "CMU Typewriter Text" (font-family-list))
+  (set-face-attribute 'default nil :font "CMU Typewriter Text" :height 200))
  ((member "CMU Typewriter Text" (font-family-list))
   (set-face-attribute 'default nil :font "CMU Typewriter Text" :height 200))
  (set-face-attribute 'default nil :height 200))
@@ -1057,3 +1188,26 @@ With argument ARG, do this that many times."
 (set-default default-buffer-file-coding-system 'utf-8-unix)
 
 (setq visible-bell 1)
+
+;; MACROS
+
+;; HOW TO RECORD, NAME, AND ASSIGN BINDING TO MACRO
+;; record with F3 and stop with F4
+;; M-x kmacro-name-last-macro
+;; in .emacs, insert macro with M-x insert-kbd-macro
+;; assign kbd as above
+
+;; html
+
+;; h1 h2 and h3 already have default bindings: c-c 1, 2, and 3
+(fset 'html-h1
+   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ("<h1</h1" 0 "%d")) arg)))
+
+(fset 'html-exit-tag
+   "\C-s>\C-m\C-s")
+
+(fset 'html-math-inline
+   "$$\C-b")
+
+(fset 'html-math-display
+   "$$$$\C-b\C-b")
