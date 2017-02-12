@@ -8,6 +8,7 @@
 ;; c-m-k clears search highlights. C-S C-G also works.
 
 (add-to-list 'load-path "~/.emacs.d/lisp")
+(add-to-list 'load-path "~/.emacs.d/lisp/modules")
 
 ;; AUTOPAIR
 ;; comment if autopair.el is in standard load path_
