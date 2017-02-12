@@ -7,7 +7,7 @@
 
 ;; c-m-k clears search highlights. C-S C-G also works.
 
-(add-to-list 'load-path "~/.emacs.d/")
+(add-to-list 'load-path "~/.emacs.d/lisp")
 
 ;; AUTOPAIR
 ;; comment if autopair.el is in standard load path_
@@ -193,13 +193,14 @@ there's a region, all lines that region covers will be duplicated."
   (local-set-key (kbd "C-c L") 'insert-li)
   (local-set-key (kbd "C-c C-s") 'html-span)
   (local-set-key (kbd "C-c C-/") 'sgml-close-tag)
+  (local-set-key (kbd "C-c C-,") 'html-ejs-variable)
+  (local-set-key (kbd "C-c C-.") 'html-ejs-script)
   (local-set-key (kbd "C-c C") 'html-code)
   (local-set-key (kbd "C-c RET") 'html-exit-tag)
-
+  ;;
   (local-set-key (kbd "C-c h") 'html-hr)
   (local-set-key (kbd "C-c M-i") 'html-img)
   (local-set-key (kbd "C-c M-e") 'html-epigraph)
-
   ;; for html mathjax
   (local-set-key (kbd "C-c f") 'html-math-frac)
   (local-set-key (kbd "C-c i") 'html-math-inverse)
@@ -212,7 +213,6 @@ there's a region, all lines that region covers will be duplicated."
   (local-set-key (kbd "C-c M") 'html-math-display)
   (local-set-key (kbd "C-c a") 'html-math-align)
   (local-set-key (kbd "C-c c") 'html-math-cases)
-
   )
 
 (add-hook 'html-mode-hook 'my-html-hook)
@@ -692,7 +692,25 @@ there's a region, all lines that region covers will be duplicated."
 
 (defun my-js-console-log()
   (interactive)
-  (insert "console.log()")
+  (insert "logger.info()")
+  (backward-char 1)
+  )
+
+(defun my-js-console-warn()
+  (interactive)
+  (insert "logger.warn()")
+  (backward-char 1)
+  )
+
+(defun my-js-console-error()
+  (interactive)
+  (insert "logger.error()")
+  (backward-char 1)
+  )
+
+(defun my-js-console-debug()
+  (interactive)
+  (insert "logger.debug()")
   (backward-char 1)
   )
 
@@ -817,7 +835,36 @@ there's a region, all lines that region covers will be duplicated."
   (newline-and-indent)
   )
 
+(defun js-multiline-comment()
+  (interactive)
+  (indent-according-to-mode)
+  (insert "/*")
+  (newline-and-indent)
+  (newline-and-indent)
+  (insert "*/")
+  (indent-according-to-mode)
+  (previous-line)
+  (indent-according-to-mode)
+  )
 
+(defun js-arrow-function()
+  (interactive)
+  (insert " => ")
+  )
+
+(defun html-ejs-variable()
+  (interactive)
+  (insert "<%=  %>")
+  (backward-char 3)
+  )
+
+(defun html-ejs-script()
+  (interactive)
+  (insert "<%  %>")
+  (backward-char 3)
+  )
+
+;; mach
 
 (defun my-c++-braces-newline()
   (interactive)
@@ -959,7 +1006,11 @@ With argument ARG, do this that many times."
 
 (defun timestamp ()
   (interactive)
-  (insert (format-time-string "%y%m%d %a")))
+  (insert (format-time-string "%Y-%m-%d")))
+
+(defun timestamp-hhmmss ()
+  (interactive)
+  (insert (format-time-string "%H:%M:%S")))
 
 (defun my-insert-pointer()
   (interactive)
@@ -1053,7 +1104,8 @@ With argument ARG, do this that many times."
 ;; (autoload 'ibuffer "ibuffer" "list buffers" t)
 (global-set-key (kbd "M-i") 'universal-argument)
 (global-set-key (kbd "M-/") 'dabbrev-expand)
-(global-set-key (kbd "C-t") 'timestamp)
+(global-set-key (kbd "C-S-t") 'timestamp)
+(global-set-key (kbd "C-t") 'timestamp-hhmmss)
 
 ; DECOR
 (global-set-key (kbd "C-h C-l") 'my-hline)
@@ -1130,11 +1182,16 @@ With argument ARG, do this that many times."
  'js-mode-hook
  (function
   (lambda()
+    (local-set-key (kbd "C-\\") 'js-multiline-comment)
+    (local-set-key (kbd "C-.") 'js-arrow-function)
     (local-set-key (kbd "M-j") 'my-c++-braces-newline)
     (local-set-key (kbd "C-c C-w") 'my-js-async-waterfall)
     (local-set-key (kbd "C-c C-d") 'my-js-new-function)
     (local-set-key (kbd "C-c C-s") 'my-js-new-function-done)
     (local-set-key (kbd "C-c C-l") 'my-js-console-log)
+    (local-set-key (kbd "C-c C-e") 'my-js-console-error)
+    (local-set-key (kbd "C-c C-b") 'my-js-console-debug)
+    (local-set-key (kbd "C-c C-n") 'my-js-console-warn)
     (local-set-key (kbd "C-c C-j") 'my-js-insert-json-stringify)
     )))
 
@@ -1164,11 +1221,11 @@ With argument ARG, do this that many times."
 (tool-bar-mode -1) ;; no tool bar at top in emacs window
 (cond
  ((member "Inconsolata" (font-family-list))
-  (set-face-attribute 'default nil :family "Inconsolata" :height 240 :weight 'bold))
+  (set-face-attribute 'default nil :family "Inconsolata" :height 260 :weight 'bold))
  ((member "Consolas" (font-family-list))
   (set-face-attribute 'default nil :font "Consolas" :height 200 :weight 'light))
  ((member "Courier New" (font-family-list))
-  (set-face-attribute 'default nil :font "Courier New" :height 200 :weight 'light))
+  (set-face-attribute 'default nil :font "Courier New" :height 260 :weight 'light))
  ((member "Arial" (font-family-list))
   (set-face-attribute 'default nil :font "Arial" :height 220))
  ((member "Courier" (font-family-list))
