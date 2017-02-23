@@ -123,7 +123,7 @@ alias ci="git ci -m"
 alias co="git checkout"
 alias hist="git hist"
 alias st="git status"
-alias br="git branch"
+alias br="git branch -vv"
 
 # SETS TERM TITLE before executing every command
 preexec () {
@@ -150,3 +150,11 @@ echo "$this_command_for_console_and_title_bar" >> $console_log; \
 # makes terminal editing like mint emacs (without your
 # customizations). This is default, I think.
 set -o emacs
+
+export NVM_DIR="/Users/trong/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
+export PATH=.:~:~/nt/bin:~/Library/Python/2.7/bin:$PATH
+
+# added by Anaconda2 4.3.0 installer
+export PATH="/Users/trong/anaconda/bin:$PATH"
